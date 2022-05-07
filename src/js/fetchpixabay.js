@@ -10,18 +10,14 @@ const options = {
         
 }
 
-export async function fetchPixabay(value) {
-    try {
-      const response = await axios.get(BASE_URL,{
+export const fetchPixabay = async (query) => {
+      await axios.get(BASE_URL,{
           params: {
             "key": API_KEY,
-            "q": value,
+            "q": query,
             "page": 1,
             ...options
           } 
-      });
-      console.log(response);
-    } catch (error) {
-      console.error(error);
-    }
+      }).catch ((error) => console.error(error));
+    
   }
