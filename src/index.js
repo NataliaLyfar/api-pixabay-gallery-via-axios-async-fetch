@@ -6,98 +6,72 @@ import "regenerator-runtime/runtime.js";
 
 import { fetchPics } from './js/fetchpixabay.js';
 import photoCardTpl from './partials/photocard.hbs';
+import { onScroll } from './js/onScroll.js';
 import { refs } from './js/refs.js';
 
 const galleryLigthbox = new SimpleLightbox(".gallery a", {
-    captionDelay: 250,
-  });
+  captionsData: 'alt',
+  captionType: 'alt',
+  captionDelay: 200,
+});
 
-// const initialData = {
-//     query: null,
-//     totalHits: 0,
-//     page: 1,
-//     hits: [],
-//   };
-// // const dataCard = {
-// //     previewURL,
-// //     largeImageURL,
-// //     tags,
-// //     likes,
-// //     views,
-// //     comments,
-// //     downloads,
-// //   };
-
-// const renderCards = dataCard =>{
-//     dataCard.map(({
-//       previewURL,
-//       largeImageURL,
-//       tags,
-//       likes,
-//       views,
-//       comments,
-//       downloads,
-//     }) => photoCardTpl(data)).join('');
-//     galleryLigthbox.refresh();
-// }
-  const renderPic = (pics) => pics.map((pic) => photoCardTpl(pic))
-const renderGallery = () => {
-  const markup = pics
-    .map(
-      (pic) => renderPic(pic)
-    )
-    .join("");
- refs.gallery.innerHTML = markup;
-}
-
-
-
-// const renderGallery = async () => {
-//   const { query, page } = initialData;
-
-//   await fetchPixabay(query, page)
-//     .then((res) => {
-//       const { data } = res;
-
-//       if (data.hits.length) {
-//         if (page === 1) {
-//           initialData.totalHits = data.totalHits;
-//           initialData.hits = [];
-//           Notify.success(`Hooray! We found ${data.totalHits} images.`);
-//         }
-
-//         initialData.hits = initialData.hits.concat(data.hits);
-//         renderCards(data.hits);
-
-//         observer.observe(document.querySelector(".photo-card:last-child"));
-//       } else
-//         Notify.failure(
-//           "Sorry, there are no images matching your search query. Please try again."
-//         );
-//     })
-//     .catch((e) => console.error(e));
-// };
-
-const onFetchError = () => {
-  Notiflix.Notify.failure('Oops! There is no country with that name!');
-  // refs.countryInfo.innerHTML = '';
-  // refs.countryList.innerHTML = '';
+const initialData = {
+  query: null,
+  totalHits: 0,
+  page: 1,
+  hits: [],
 };
-const onSearch = async(e) => {
-    e.preventDefault;
-    const {
-        elements: { searchQuery }
-    } = e.currentTarget;
-    initialData.query = searchQuery.value.toLowerCase().trim();
-    const { query } = initialData;
-    if (query.length) {
-      try {
-        const pics = await fetchPics(query);
-        renderGallery(pics);
-      } catch (error) {
-        onFetchError()
-      }
-    }
-}
+const createGallery = hits => {
+refs.gallery.insertAdjacentHTML('beforeend', photoCardTpl(hits));
+galleryLigthbox.refresh();
+};
+const renderGallery = async () => {
+  const { query, page } = initialData;
+
+  await fetchPics(query, page)
+    .then((res) => {
+      const { data } = res;
+      if (data.hits.length) {
+        if (page === 1) {
+          initialData.totalHits = data.totalHits;
+          Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
+        }
+        createGallery(data.hits);
+        observer.observe(document.querySelector(".photo-card:last-child"));
+        onScroll();
+      } else
+        Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.");
+    })
+    .catch((e) => console.error(e));
+};
+const observer = new IntersectionObserver((entries, observer) => {
+  const { hits, totalHits } = initialData;
+  const lastCard = entries[0];
+  if (!lastCard.isIntersecting || hits.length === totalHits) return;
+
+  observer.unobserve(lastCard.target);
+
+  initialData.page++;
+  renderGallery();
+});
+
+const onSearch = (e) => {
+  e.preventDefault();
+
+  const {
+    elements: { searchQuery },
+  } = e.currentTarget;
+
+  initialData.query = searchQuery.value.trim();
+  if (initialData.query === '') {
+    return  Notiflix.Notify.failure('There is nothing to search!');
+  }
+  
+    refs.gallery.innerHTML = "";
+    initialData.page = 1;
+    renderGallery();
+};
+
+
 refs.searchForm.addEventListener('submit', onSearch);
 

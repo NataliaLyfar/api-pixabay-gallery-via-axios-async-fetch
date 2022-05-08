@@ -18,7 +18,7 @@ input {
   background: #fff;
   color: #9E9C9C;
 }
-button {
+.button {
   position: absolute; 
   top: 0;
   right: 0px;
@@ -29,7 +29,7 @@ button {
   border-radius: 0 5px 5px 0;
   cursor: pointer;
 }
-button:before {
+.button:before {
   content: "\f002";
   font-family: FontAwesome;
   font-size: 16px;
