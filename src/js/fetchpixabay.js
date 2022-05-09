@@ -5,11 +5,11 @@ const options = {
         "image_type": "photo",
         "orientation": "horizontal",
         "safesearch": true,
-}
+        per_page: 40,
+};
 
 export const fetchPics = (value, page) =>
-axios
-  .get(BASE_URL, {
+axios.get(BASE_URL, {
     params: {
       key: API_KEY,
       q: value,

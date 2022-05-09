@@ -1,5 +1,6 @@
-.btn-top {
+.scrolltop {
 z-index: 99;
+opacity: 0;
 display: flex;
 align-items: center;
 justify-content: center;
@@ -12,6 +13,10 @@ justify-content: center;
     background-color: teal;
     color: #fff;
     border-radius: 50%;
+    cursor: pointer;
+    &:hover{
+      background-color: #7BA7AB;
+    }
   }
   
   .showBtn {
