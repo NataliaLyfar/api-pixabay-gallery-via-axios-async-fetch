@@ -5,50 +5,53 @@ import "simplelightbox/dist/simple-lightbox.min.css";
 import "regenerator-runtime/runtime.js";
 
 import { refs } from './js/refs.js';
-import { fetchPics } from './js/fetchpixabay.js';
+import { fetchPics, fetchPicsOptions } from './js/fetchpixabay.js';
 import {observer}  from './js/observer.js';
-import { scrollToTop, toggleBtnAction } from './js/onScroll.js';
-import picCardTpl from './partials/picCard.hbs';
+import onScroll from './js/onScroll.js';
+import picCardTpl from './template/picCard.hbs';
+
+export const initialData = {
+  totalHits: 0,
+  hits: [],
+};
 
 const galleryLigthbox = new SimpleLightbox(".gallery a", {captionDelay: 200});
-
 const renderGallery = hits => {
 refs.gallery.insertAdjacentHTML('beforeend', picCardTpl(hits));
 galleryLigthbox.refresh();
 };
 
-export const createGallery = async () => {
-  const { query, page, } = refs.initialData;
-  await fetchPics(query, page)
-  .then((res) => {
-    const { data } = res;
-    if(data.hits.length){
-      if(page===1){
-      Notify.success(`Hooray! We found ${data.totalHits} images.`);
-    }
-   refs.initialData.hits = data.hits;
-   renderGallery(data.hits);
-   observer.observe(document.querySelector(".photo-card:last-child"));
-    }
-    else {Notify.failure("Sorry, there are no images matching your search query. Please try again.");}
-  })
+export const createGallery = () => {
+fetchPics(fetchPicsOptions)
+.then(({data}) => {
+  const {totalHits, hits} = data;
+  if(totalHits || hits.length){
+    if(fetchPicsOptions.page===1){
+    Notify.success(`Hooray! We found ${totalHits} images.`);
+  }
+  initialData.hits = hits;
+  renderGallery(hits);
+  observer.observe(document.querySelector(".gallery-item:last-child"));
+  }
+  else {Notify.info("Sorry, there are no images matching your search query. Please try again.");}
+})
 };
 
 const onSearch = (e) => {
   e.preventDefault();
+  
   const {elements: { searchQuery }} = e.currentTarget;
-  refs.initialData.query = searchQuery.value.toLowerCase().trim();
-  if (refs.initialData.query === '') {
-    Notify.failure('There is nothing to search!');
+  fetchPicsOptions.q = searchQuery.value.toLowerCase().trim();
+  if (fetchPicsOptions.q === '') {
     refs.gallery.innerHTML = "";
+    Notify.failure('There is nothing to search!');
   }
-  if(refs.initialData.query.length){
-    refs.gallery.innerHTML = '';
-    refs.initialData.page = 1;
+  if(fetchPicsOptions.q.length){
+    refs.gallery.innerHTML = "";
+    fetchPicsOptions.page = 1;
     createGallery();
   }
 };
 
 refs.searchForm.addEventListener('submit', onSearch);
-toggleBtnAction();
-scrollToTop();
+
