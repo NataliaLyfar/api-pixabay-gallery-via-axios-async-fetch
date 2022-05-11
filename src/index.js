@@ -21,8 +21,8 @@ refs.gallery.insertAdjacentHTML('beforeend', picCardTpl(hits));
 galleryLigthbox.refresh();
 };
 
-export const createGallery = () => {
-fetchPics(fetchPicsOptions)
+export const createGallery = async() => {
+await fetchPics(fetchPicsOptions)
 .then(({data}) => {
   const {totalHits, hits} = data;
   if(totalHits || hits.length){
